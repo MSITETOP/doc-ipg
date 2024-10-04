@@ -28,6 +28,7 @@ def check_password():
 
 if not check_password():
     st.stop()  # Do not continue if check_password is not True.
+
 # Show title and description.
 st.title("📄 Ответы по документу")
 st.write(
@@ -51,22 +52,34 @@ if True:
     )
 
     if uploaded_file and question:
-
-        # Process the uploaded file and question.
-        document = uploaded_file.read().decode()
-        messages = [
-            {
-                "role": "user",
-                "content": f"Вот документы: {document} \n\n---\n\n {question}",
-            }
-        ]
-
-        # Generate an answer using the OpenAI API.
-        stream = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=messages,
-            stream=True,
+        # Upload the user provided file to OpenAI
+        message_file = client.files.create(file=uploaded_file, purpose="assistants")
+        # Create a thread and attach the file to the message
+        thread = client.beta.threads.create(
+            messages=[
+                {
+                    "role": "user",
+                    "content": question,
+                    # Attach the new file to the message.
+                    "attachments": [
+                        { "file_id": message_file.id, "tools": [{"type": "file_search"}] }
+                    ],
+                }
+            ]
+        )
+        run = client.beta.threads.runs.create_and_poll(
+            thread_id=thread.id, assistant_id="asst_nB18mkuiU34T645GttfB9Dpl"
         )
 
-        # Stream the response to the app using `st.write_stream`.
-        st.write_stream(stream)
+        messages = list(client.beta.threads.messages.list(thread_id=thread.id, run_id=run.id))
+
+        message_content = messages[0].content[0].text
+        annotations = message_content.annotations
+        citations = []
+        for index, annotation in enumerate(annotations):
+            message_content.value = message_content.value.replace(annotation.text, f"[{index}]")
+            if file_citation := getattr(annotation, "file_citation", None):
+                cited_file = client.files.retrieve(file_citation.file_id)
+                citations.append(f"[{index}] {cited_file.filename}")
+     
+        st.write(message_content.value)
