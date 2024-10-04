@@ -41,7 +41,7 @@ if True:
 
     # Let the user upload a file via `st.file_uploader`.
     uploaded_file = st.file_uploader(
-        "Загрузите документы (.txt, .doc, .pdf)", type=("txt", "doc", "pdf")
+        "Загрузите документы", type=("c", "cpp", "css", "csv", "docx", "gif", "go", "html", "java", "jpeg", "jpg", "js", "json", "md", "pdf", "php", "pkl", "png", "pptx", "py", "rb", "tar", "tex", "ts", "txt", "webp", "xlsx", "xml", "zip")
     )
 
     # Ask the user for a question via `st.text_area`.
