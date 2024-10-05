@@ -1,8 +1,10 @@
 import hmac
 import streamlit as st
+import assemblyai as aai
 from openai import OpenAI
 from htmlTemplates import links
 
+st.markdown(links, unsafe_allow_html=True)
 def check_password():
     """Returns `True` if the user had the correct password."""
 
@@ -42,7 +44,6 @@ def stream_data():
 if not check_password():
     st.stop()  # Do not continue if check_password is not True.
 
-st.markdown(links, unsafe_allow_html=True)
 # Show title and description.
 st.title("📄 Ответы по документу")
 st.write("Загрузите документ ниже и задайте по нему вопрос – GPT ответит! ")
@@ -58,10 +59,22 @@ type = st.radio(
 )
 
 if type == "Аудио/Видео":
-    uploaded_files = st.file_uploader(
+    uploaded_file = st.file_uploader(
         "Загрузи файл", type=(".webm", ".aac", ".mov", ".ac3", ".mp2", ".aif", ".mp4", ".m4p", ".m4v", ".aiff", ".flac", ".flv", ".m4a", ".mp3", ".mpga", ".ogg", ".wav", ".wma")
     )
-    
+
+    if uploaded_file:
+        aai.settings.api_key = st.secrets["AAI"]
+        config = aai.TranscriptionConfig(speaker_labels=True, language_code = "ru")
+        transcriber = aai.Transcriber()
+        transcript = transcriber.transcribe(uploaded_file, config=config)
+
+        if transcript.status == aai.TranscriptStatus.error:
+            st.error(f"Transcription failed: {transcript.error}")
+        else:
+            st.write(f"Длительность: {transcript.audio_duration} сек.")
+            for utterance in transcript.utterances:
+                st.write(f"Speaker {utterance.speaker} {utterance.start//1000} - {utterance.end//1000}: {utterance.text}")
 elif type == "Текст":
     # Let the user upload a file via `st.file_uploader`.
     uploaded_files = st.file_uploader(
