@@ -54,43 +54,47 @@ uploaded_files = st.file_uploader(
     "Загрузите документы", accept_multiple_files = True, type=("c", "cpp", "css", "csv", "docx", "gif", "go", "html", "java", "jpeg", "jpg", "js", "json", "md", "pdf", "php", "pkl", "png", "pptx", "py", "rb", "tar", "tex", "ts", "txt", "webp", "xlsx", "xml", "zip")
 )
 
-# Ask the user for a question via `st.text_area`.
-question = st.text_area(
-    "Задай вопросы по документу",
-    placeholder="Можешь дать мне краткое содержимое документа?",
-    disabled=not uploaded_files,
-)
-
-if uploaded_files and question:
-    # Upload the user provided file to OpenAI
-    attach = []
+if "messages" not in st.session_state and uploaded_files:
+    st.session_state.messages = []
+    st.session_state.attach = []
     for uploaded_file in uploaded_files:
         message_file = client.files.create(file=uploaded_file, purpose="assistants")
-        attach.append({ "file_id": message_file.id, "tools": [{"type": "file_search"}] })
-    # Create a thread and attach the file to the message
-    print(attach)
-    thread = client.beta.threads.create(
-        messages=[
-            {
-                "role": "user",
-                "content": question,
-                "attachments": attach,
-            }
-        ]
-    )
-     
-    # run = client.beta.threads.runs.create_and_poll(
-    #     thread_id=thread.id, assistant_id="asst_nB18mkuiU34T645GttfB9Dpl"
-    # )
-
-    # messages = list(client.beta.threads.messages.list(thread_id=thread.id, run_id=run.id))
-    # message_content = messages[0].content[0].text
-    # st.write(message_content.value)
-
-    st.write_stream(stream_data)
+        st.session_state.attach.append({ "file_id": message_file.id, "tools": [{"type": "file_search"}] })
 
 
+if uploaded_files:
+    # Display the existing chat messages via `st.chat_message`.
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
 
-    # with st.chat_message("assistant"):
-    #     response = st.write_stream(stream)
-    # st.session_state.messages.append({"role": "assistant", "content": response})
+    # Create a chat input field to allow the user to enter a message. This will display
+    # automatically at the bottom of the page.
+    if prompt := st.chat_input("Задай вопросы по документу"):
+
+        # Store and display the current prompt.
+        st.session_state.messages.append({
+            "role": "user", 
+            "content": prompt, 
+            "attachments": st.session_state.attach
+        })
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
+
+        thread = client.beta.threads.create(
+            messages=[
+                {"role": m["role"], "content": m["content"], "attachments": m["attachments"]}
+                for m in st.session_state.messages
+            ]
+        )
+
+        # Stream the response to the chat using `st.write_stream`, then store it in 
+        # session state.
+        with st.chat_message("assistant"):
+            response = st.write_stream(stream_data)
+        st.session_state.messages.append({
+            "role": "assistant", 
+            "content": response, 
+            "attachments": []
+        })
