@@ -50,39 +50,39 @@ st.write(
 # Create an OpenAI client.
 client = OpenAI(api_key=st.secrets["KEY"])
 
-    # Let the user upload a file via `st.file_uploader`.
-    uploaded_file = st.file_uploader(
-        "Загрузите документы", type=("c", "cpp", "css", "csv", "docx", "gif", "go", "html", "java", "jpeg", "jpg", "js", "json", "md", "pdf", "php", "pkl", "png", "pptx", "py", "rb", "tar", "tex", "ts", "txt", "webp", "xlsx", "xml", "zip")
-    )
+# Let the user upload a file via `st.file_uploader`.
+uploaded_files = st.file_uploader(
+    "Загрузите документы", accept_multiple_files = True, type=("c", "cpp", "css", "csv", "docx", "gif", "go", "html", "java", "jpeg", "jpg", "js", "json", "md", "pdf", "php", "pkl", "png", "pptx", "py", "rb", "tar", "tex", "ts", "txt", "webp", "xlsx", "xml", "zip")
+)
 
-    # Ask the user for a question via `st.text_area`.
-    question = st.text_area(
-        "Задай вопросы по документу",
-        placeholder="Можешь дать мне краткое содержимое документа?",
-        disabled=not uploaded_file,
-    )
+# Ask the user for a question via `st.text_area`.
+question = st.text_area(
+    "Задай вопросы по документу",
+    placeholder="Можешь дать мне краткое содержимое документа?",
+    disabled=not uploaded_files,
+)
 
-    if uploaded_file and question:
-        # Upload the user provided file to OpenAI
+if uploaded_files and question:
+    # Upload the user provided file to OpenAI
+    attach = []
+    for uploaded_file in uploaded_files:
         message_file = client.files.create(file=uploaded_file, purpose="assistants")
-        # Create a thread and attach the file to the message
-        thread = client.beta.threads.create(
-            messages=[
-                {
-                    "role": "user",
-                    "content": question,
-                    # Attach the new file to the message.
-                    "attachments": [
-                        { "file_id": message_file.id, "tools": [{"type": "file_search"}] }
-                    ],
-                }
-            ]
-        )
-
-        
-        stream = client.beta.threads.runs.stream(
-            thread_id=thread.id, assistant_id="asst_nB18mkuiU34T645GttfB9Dpl"
-        )
+        attach.append({ "file_id": message_file.id, "tools": [{"type": "file_search"}] })
+    # Create a thread and attach the file to the message
+    print(attach)
+    thread = client.beta.threads.create(
+        messages=[
+            {
+                "role": "user",
+                "content": question,
+                "attachments": attach,
+            }
+        ]
+    )
+     
+    # run = client.beta.threads.runs.create_and_poll(
+    #     thread_id=thread.id, assistant_id="asst_nB18mkuiU34T645GttfB9Dpl"
+    # )
 
         # messages = list(client.beta.threads.messages.list(thread_id=thread.id, run_id=run.id))
 
