@@ -64,17 +64,19 @@ if type == "Аудио/Видео":
     )
 
     if uploaded_file:
-        aai.settings.api_key = st.secrets["AAI"]
-        config = aai.TranscriptionConfig(speaker_labels=True, language_code = "ru")
-        transcriber = aai.Transcriber()
-        transcript = transcriber.transcribe(uploaded_file, config=config)
+        with st.spinner('Идет расшифровка...'):
+            aai.settings.api_key = st.secrets["AAI"]
+            config = aai.TranscriptionConfig(speaker_labels=True, language_code = "ru")
+            transcriber = aai.Transcriber()
+            transcript = transcriber.transcribe(uploaded_file, config=config)
 
-        if transcript.status == aai.TranscriptStatus.error:
-            st.error(f"Transcription failed: {transcript.error}")
-        else:
-            st.write(f"Длительность: {transcript.audio_duration} сек.")
-            for utterance in transcript.utterances:
-                st.write(f"Speaker {utterance.speaker} {utterance.start//1000} - {utterance.end//1000}: {utterance.text}")
+            if transcript.status == aai.TranscriptStatus.error:
+                st.error(f"Transcription failed: {transcript.error}")
+            else:
+                st.write(f"Длительность: {transcript.audio_duration} сек.")
+                for utterance in transcript.utterances:
+                    st.write(f"Speaker {utterance.speaker} {utterance.start//1000} - {utterance.end//1000}: {utterance.text}")
+        st.success("Обработка завершена!")
 elif type == "Текст":
     # Let the user upload a file via `st.file_uploader`.
     uploaded_files = st.file_uploader(
@@ -85,12 +87,14 @@ elif type == "Текст":
         if "messages" not in st.session_state:
             st.session_state.messages = []
             st.session_state.attach = []
-            for uploaded_file in uploaded_files:
-                message_file = client.files.create(file=uploaded_file, purpose="assistants")
-                st.session_state.attach.append({ 
-                    "file_id": message_file.id, 
-                    "tools": [{"type": "file_search"}] 
-                })
+            with st.spinner('Загрузка документов...'):
+                for uploaded_file in uploaded_files:
+                    message_file = client.files.create(file=uploaded_file, purpose="assistants")
+                    st.session_state.attach.append({ 
+                        "file_id": message_file.id, 
+                        "tools": [{"type": "file_search"}] 
+                    })
+            st.success("Документы загружены!")
 
         # Display the existing chat messages via `st.chat_message`.
         for message in st.session_state.messages:
