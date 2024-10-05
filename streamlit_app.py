@@ -64,7 +64,7 @@ if type == "Аудио/Видео":
     )
 
     if uploaded_file:
-        with st.spinner('Идет расшифровка...'):
+        with st.spinner('Идет обработка...'):
             aai.settings.api_key = st.secrets["AAI"]
             config = aai.TranscriptionConfig(speaker_labels=True, language_code = "ru")
             transcriber = aai.Transcriber()
@@ -76,7 +76,7 @@ if type == "Аудио/Видео":
                 st.write(f"Длительность: {transcript.audio_duration} сек.")
                 for utterance in transcript.utterances:
                     st.write(f"Speaker {utterance.speaker} {utterance.start//1000} - {utterance.end//1000}: {utterance.text}")
-        st.success("Обработка завершена!")
+
 elif type == "Текст":
     # Let the user upload a file via `st.file_uploader`.
     uploaded_files = st.file_uploader(
