@@ -40,6 +40,7 @@ def stream_data():
 if not check_password():
     st.stop()  # Do not continue if check_password is not True.
 
+
 # Show title and description.
 st.title("📄 Ответы по документу")
 st.write(
@@ -49,6 +50,57 @@ st.write(
 # Create an OpenAI client.
 client = OpenAI(api_key=st.secrets["KEY"])
 
+    # Let the user upload a file via `st.file_uploader`.
+    uploaded_file = st.file_uploader(
+        "Загрузите документы", type=("c", "cpp", "css", "csv", "docx", "gif", "go", "html", "java", "jpeg", "jpg", "js", "json", "md", "pdf", "php", "pkl", "png", "pptx", "py", "rb", "tar", "tex", "ts", "txt", "webp", "xlsx", "xml", "zip")
+    )
+
+    # Ask the user for a question via `st.text_area`.
+    question = st.text_area(
+        "Задай вопросы по документу",
+        placeholder="Можешь дать мне краткое содержимое документа?",
+        disabled=not uploaded_file,
+    )
+
+    if uploaded_file and question:
+        # Upload the user provided file to OpenAI
+        message_file = client.files.create(file=uploaded_file, purpose="assistants")
+        # Create a thread and attach the file to the message
+        thread = client.beta.threads.create(
+            messages=[
+                {
+                    "role": "user",
+                    "content": question,
+                    # Attach the new file to the message.
+                    "attachments": [
+                        { "file_id": message_file.id, "tools": [{"type": "file_search"}] }
+                    ],
+                }
+            ]
+        )
+
+        
+        stream = client.beta.threads.runs.stream(
+            thread_id=thread.id, assistant_id="asst_nB18mkuiU34T645GttfB9Dpl"
+        )
+
+        # messages = list(client.beta.threads.messages.list(thread_id=thread.id, run_id=run.id))
+
+        # message_content = messages[0].content[0].text
+        # annotations = message_content.annotations
+        # citations = []
+        # for index, annotation in enumerate(annotations):
+        #     message_content.value = message_content.value.replace(annotation.text, f"[{index}]")
+        #     if file_citation := getattr(annotation, "file_citation", None):
+        #         cited_file = client.files.retrieve(file_citation.file_id)
+        #         citations.append(f"[{index}] {cited_file.filename}")
+
+        st.write_stream(stream)
+
+
+
+     
+        # st.write(message_content.value)
 # Let the user upload a file via `st.file_uploader`.
 uploaded_files = st.file_uploader(
     "Загрузите документы", accept_multiple_files = True, type=("c", "cpp", "css", "csv", "docx", "gif", "go", "html", "java", "jpeg", "jpg", "js", "json", "md", "pdf", "php", "pkl", "png", "pptx", "py", "rb", "tar", "tex", "ts", "txt", "webp", "xlsx", "xml", "zip")
