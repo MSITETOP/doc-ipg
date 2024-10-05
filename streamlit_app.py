@@ -42,27 +42,27 @@ if not check_password():
 
 # Show title and description.
 st.title("📄 Ответы по документу")
-st.write(
-    "Загрузите документ ниже и задайте по нему вопрос – GPT ответит! "
-)
+st.write("Загрузите документ ниже и задайте по нему вопрос – GPT ответит! ")
 
 # Create an OpenAI client.
 client = OpenAI(api_key=st.secrets["KEY"])
 
 # Let the user upload a file via `st.file_uploader`.
 uploaded_files = st.file_uploader(
-    "Загрузите документы", accept_multiple_files = True, type=("c", "cpp", "css", "csv", "docx", "gif", "go", "html", "java", "jpeg", "jpg", "js", "json", "md", "pdf", "php", "pkl", "png", "pptx", "py", "rb", "tar", "tex", "ts", "txt", "webp", "xlsx", "xml", "zip")
+    "Загрузите документы", accept_multiple_files = True, type=(".c", ".cpp", ".css", ".doc", ".docx", ".go", ".html", ".java", ".js", ".json", ".md", ".pdf", ".php", ".pptx", ".py", ".rb", ".sh", ".ts", ".txt")
 )
 
-if "messages" not in st.session_state and uploaded_files:
-    st.session_state.messages = []
-    st.session_state.attach = []
-    for uploaded_file in uploaded_files:
-        message_file = client.files.create(file=uploaded_file, purpose="assistants")
-        st.session_state.attach.append({ "file_id": message_file.id, "tools": [{"type": "file_search"}] })
-
-
 if uploaded_files:
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+        st.session_state.attach = []
+        for uploaded_file in uploaded_files:
+            message_file = client.files.create(file=uploaded_file, purpose="assistants")
+            st.session_state.attach.append({ 
+                "file_id": message_file.id, 
+                "tools": [{"type": "file_search"}] 
+            })
+
     # Display the existing chat messages via `st.chat_message`.
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
@@ -71,7 +71,6 @@ if uploaded_files:
     # Create a chat input field to allow the user to enter a message. This will display
     # automatically at the bottom of the page.
     if prompt := st.chat_input("Задай вопросы по документу"):
-
         # Store and display the current prompt.
         st.session_state.messages.append({
             "role": "user", 
@@ -80,7 +79,6 @@ if uploaded_files:
         })
         with st.chat_message("user"):
             st.markdown(prompt)
-
 
         thread = client.beta.threads.create(
             messages=[
