@@ -51,14 +51,7 @@ st.write("Загрузите документ ниже и задайте по н
 # Create an OpenAI client.
 client = OpenAI(api_key=st.secrets["KEY"])
 
-
-type = st.radio(
-    "Выбери тип документа",
-    ["Аудио/Видео", "Текст"],
-    index = None
-)
-
-if type == "Аудио/Видео":
+if True:
     uploaded_file = st.file_uploader(
         "Загрузи файл", type=(".webm", ".aac", ".mov", ".ac3", ".mp2", ".aif", ".mp4", ".m4p", ".m4v", ".aiff", ".flac", ".flv", ".m4a", ".mp3", ".mpga", ".ogg", ".wav", ".wma")
     )
@@ -75,59 +68,5 @@ if type == "Аудио/Видео":
             else:
                 st.write(f"Длительность: {transcript.audio_duration} сек.")
                 for utterance in transcript.utterances:
-                    st.write(f"Speaker {utterance.speaker} {utterance.start//1000} - {utterance.end//1000}: {utterance.text}")
-
-elif type == "Текст":
-    # Let the user upload a file via `st.file_uploader`.
-    uploaded_files = st.file_uploader(
-        "Загрузи документы", accept_multiple_files = True, type=(".c", ".cpp", ".css", ".doc", ".docx", ".go", ".html", ".java", ".js", ".json", ".md", ".pdf", ".php", ".pptx", ".py", ".rb", ".sh", ".ts", ".txt")
-    )
-
-    if uploaded_files:
-        if "messages" not in st.session_state:
-            st.session_state.messages = []
-            st.session_state.attach = []
-            with st.spinner('Загрузка документов...'):
-                for uploaded_file in uploaded_files:
-                    message_file = client.files.create(file=uploaded_file, purpose="assistants")
-                    st.session_state.attach.append({ 
-                        "file_id": message_file.id, 
-                        "tools": [{"type": "file_search"}] 
-                    })
-            st.success("Документы загружены!")
-
-        # Display the existing chat messages via `st.chat_message`.
-        for message in st.session_state.messages:
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
-
-        # Create a chat input field to allow the user to enter a message. This will display
-        # automatically at the bottom of the page.
-        if prompt := st.chat_input("Задай вопросы по документу"):
-            # Store and display the current prompt.
-            st.session_state.messages.append({
-                "role": "user", 
-                "content": prompt, 
-                "attachments": st.session_state.attach
-            })
-            with st.chat_message("user"):
-                st.markdown(prompt)
-
-            thread = client.beta.threads.create(
-                messages=[
-                    {"role": m["role"], "content": m["content"], "attachments": m["attachments"]}
-                    for m in st.session_state.messages
-                ]
-            )
-
-            # Stream the response to the chat using `st.write_stream`, then store it in 
-            # session state.
-            with st.chat_message("assistant"):
-                response = st.write_stream(stream_data)
-            st.session_state.messages.append({
-                "role": "assistant", 
-                "content": response, 
-                "attachments": []
-            })
-        
-    
+                    st.chat_message("user", avatar="🧑‍💻").write(f"{utterance.speaker} {utterance.start//1000} - {utterance.end//1000}: {utterance.text}")
+#😈👹😺👾👻🤡🤠
