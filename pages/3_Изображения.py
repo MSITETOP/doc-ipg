@@ -46,28 +46,8 @@ if not check_password():
     st.stop()  # Do not continue if check_password is not True.
 
 # Show title and description.
-st.title("📄 Анализ видео и аудио файлов")
+st.title("Анализ изображений")
 st.write("Загрузите документ ниже и задайте по нему вопрос – GPT ответит! ")
 
 # Create an OpenAI client.
 client = OpenAI(api_key=st.secrets["KEY"])
-
-if True:
-    uploaded_file = st.file_uploader(
-        "Загрузи файл", type=(".webm", ".aac", ".mov", ".ac3", ".mp2", ".aif", ".mp4", ".m4p", ".m4v", ".aiff", ".flac", ".flv", ".m4a", ".mp3", ".mpga", ".ogg", ".wav", ".wma")
-    )
-
-    if uploaded_file:
-        with st.spinner('Идет обработка...'):
-            aai.settings.api_key = st.secrets["AAI"]
-            config = aai.TranscriptionConfig(speaker_labels=True, language_code = "ru")
-            transcriber = aai.Transcriber()
-            transcript = transcriber.transcribe(uploaded_file, config=config)
-
-            if transcript.status == aai.TranscriptStatus.error:
-                st.error(f"Transcription failed: {transcript.error}")
-            else:
-                st.write(f"Длительность: {transcript.audio_duration} сек.")
-                for utterance in transcript.utterances:
-                    st.chat_message("user", avatar="🧑‍💻").write(f"{utterance.speaker} {utterance.start//1000} - {utterance.end//1000}: {utterance.text}")
-#😈👹😺👾👻🤡🤠

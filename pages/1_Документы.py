@@ -47,7 +47,7 @@ if not check_password():
     st.stop()  # Do not continue if check_password is not True.
 
 # Show title and description.
-st.title("📄 Ответы по документу")
+st.title("📄 Анализ документов")
 st.write("Загрузите документ ниже и задайте по нему вопрос – GPT ответит! ")
 
 # Create an OpenAI client.
