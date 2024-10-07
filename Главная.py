@@ -4,7 +4,7 @@ import assemblyai as aai
 from openai import OpenAI
 from htmlTemplates import links
 
-st.set_page_config(page_title="Streamlit Gallery by Okld")
+st.set_page_config(page_title="AI анализ файлов",layout="wide")
 
 def check_password():
     """Returns `True` if the user had the correct password."""

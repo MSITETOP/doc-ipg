@@ -4,6 +4,7 @@ import assemblyai as aai
 from openai import OpenAI
 from htmlTemplates import links
 
+st.set_page_config(page_title="AI анализ ауди/видео файлов",layout="wide")
 st.markdown(links, unsafe_allow_html=True)
 def check_password():
     """Returns `True` if the user had the correct password."""
