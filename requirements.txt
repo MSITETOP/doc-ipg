@@ -7,3 +7,4 @@ streamlit
 # extra
 openai
 assemblyai
+git+https://github.com/openai/swarm.git

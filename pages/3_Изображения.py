@@ -2,7 +2,9 @@ import hmac
 import streamlit as st
 import assemblyai as aai
 from openai import OpenAI
+from swarm import Swarm, Agent
 from htmlTemplates import links
+import json
 
 st.set_page_config(page_title="AI анализ ауди/видео файлов",layout="wide")
 st.markdown(links, unsafe_allow_html=True)
@@ -30,17 +32,21 @@ def check_password():
     return False
 
 def stream_data():
-    with client.beta.threads.runs.stream(
-        thread_id=thread.id,
-        assistant_id="asst_nB18mkuiU34T645GttfB9Dpl",
-    ) as stream:
-        for event in stream:
-            #print(event)
-            # Print the text from text delta events
-            if event.event == "thread.message.delta" and event.data.delta.content:
-                #print(event.data.delta.content[0].text)
-                yield event.data.delta.content[0].text.value
+    agent_a = Agent(
+        name="Agent A",
+        model="gpt-4o-mini",#"gpt-4o",#"gpt-4o-mini","o1-preview
+        instructions="Ты универсальный AI Ассистент",
+    )
 
+    stream = sw.run(
+        agent=agent_a,
+        stream=True,
+        messages=st.session_state.messages,
+    )
+
+    for chunk in stream:
+        if "content" in chunk and chunk["content"]:
+            yield chunk["content"]
 
 if not check_password():
     st.stop()  # Do not continue if check_password is not True.
@@ -51,3 +57,53 @@ st.write("Загрузите документ ниже и задайте по н
 
 # Create an OpenAI client.
 client = OpenAI(api_key=st.secrets["KEY"])
+sw = Swarm(client = client)
+
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+uploaded_files = st.file_uploader(
+    "Загрузи изображения", key = "upload_file", label_visibility = "hidden", accept_multiple_files = True, type=(".png", ".jpg", ".jpeg", ".webp")
+)
+
+files = []
+if uploaded_files:
+    with st.spinner('Загрузка изображений...'):
+        for uploaded_file in uploaded_files:
+            message_file = client.files.create(file=uploaded_file, purpose="assistants")
+            files.append({ 
+                "file_id": message_file.id, 
+                "tools": [{"type": "file_search"}] 
+            })
+    st.success("Изображения загружены!")
+
+if prompt := st.chat_input("Ваш запрос"):
+    st.session_state.messages.append({
+        "role": "user", 
+        "content": [
+            {
+                "type": "text",
+                "text": prompt
+            },
+            {
+                "type": "image_url",
+                "image_url": {"url":"https://image-coze.msite.top/20d30076-a108-42a9-b1b7-f0b29ccd4ef3.jpg"}
+            },
+        ], 
+        #"attachments": files
+    })
+
+    print(st.session_state.messages)
+    with st.chat_message("assistant"):
+        response = st.write_stream(stream_data)
+
+    files = []            
+    st.session_state.messages.append({
+        "role": "assistant", 
+        "content": response, 
+        "attachments": []
+    })
