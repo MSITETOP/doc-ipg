@@ -2,7 +2,7 @@
 streamlit
 
 # Streamlit components
-
+streamlit_option_menu
 
 # extra
 openai

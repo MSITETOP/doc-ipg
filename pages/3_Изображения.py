@@ -4,9 +4,15 @@ import assemblyai as aai
 from openai import OpenAI
 from swarm import Swarm, Agent
 from htmlTemplates import links
+from streamlit_option_menu import option_menu
 import json
 
-st.set_page_config(page_title="AI анализ ауди/видео файлов",layout="wide")
+st.set_page_config(page_title="AI анализ ауди/видео файлов",layout="wide",menu_items={
+        'Get Help': 'https://www.extremelycoolapp.com/help',
+        'Report a bug': "https://www.extremelycoolapp.com/bug",
+        'About': "# This is a header. This is an *extremely* cool app!"
+    })
+
 st.markdown(links, unsafe_allow_html=True)
 def check_password():
     """Returns `True` if the user had the correct password."""
@@ -43,7 +49,7 @@ def stream_data():
         stream=True,
         messages=st.session_state.messages,
     )
-
+    uploaded_files = []
     for chunk in stream:
         if "content" in chunk and chunk["content"]:
             yield chunk["content"]
